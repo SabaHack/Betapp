@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 import { Search, Filter, X } from 'lucide-react';
@@ -17,7 +17,7 @@ import {
 
 import { cities, propertyTypes } from '@/data/properties';
 
-export default function PropertiesPage() {
+function PropertiesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -89,7 +89,11 @@ export default function PropertiesPage() {
       params.set('city', newFilters.city);
     }
 
-    router.push(`/properties?${params.toString()}`);
+    const queryString = params.toString();
+
+    router.push(
+      queryString ? `/properties?${queryString}` : '/properties'
+    );
   };
 
   const clearFilters = () => {
@@ -345,5 +349,19 @@ export default function PropertiesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PropertiesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-luxury-dark flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-2 border-luxury-gold border-t-transparent rounded-full" />
+        </div>
+      }
+    >
+      <PropertiesContent />
+    </Suspense>
   );
 }
