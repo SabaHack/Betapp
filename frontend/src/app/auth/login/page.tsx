@@ -2,29 +2,37 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Building2, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { authService } from '@/data/users';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate login
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Store mock user
-    localStorage.setItem('betapp_user', JSON.stringify({
-      id: '1',
-      name: 'Demo User',
-      email,
-    }));
-    
-    window.location.href = '/dashboard';
+    setError('');
+
+    try {
+      const user = await authService.login(email, password);
+      
+      if (user) {
+        localStorage.setItem('betapp_user', JSON.stringify(user));
+        router.push('/dashboard');
+      } else {
+        setError('Invalid email or password');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +58,13 @@ export default function LoginPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="flex items-center p-3 bg-luxury-error/10 border border-luxury-error/30 rounded">
+                <AlertCircle className="w-5 h-5 text-luxury-error mr-2" />
+                <span className="text-luxury-error text-sm">{error}</span>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm text-luxury-textMuted mb-2">Email Address</label>
               <div className="relative">
@@ -120,11 +135,13 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo Note */}
-        <div className="mt-6 p-4 bg-luxury-charcoal border border-luxury-border text-center">
-          <p className="text-luxury-textMuted text-sm">
-            This is a demo. Click "Sign In" to access the dashboard.
-          </p>
+        {/* Demo Credentials */}
+        <div className="mt-6 p-4 bg-luxury-charcoal border border-luxury-border">
+          <p className="text-luxury-textMuted text-sm text-center mb-2">Demo Credentials:</p>
+          <div className="text-xs text-luxury-textMuted space-y-1">
+            <p><span className="text-luxury-gold">Email:</span> john@example.com</p>
+            <p><span className="text-luxury-gold">Password:</span> password123</p>
+          </div>
         </div>
       </div>
     </div>

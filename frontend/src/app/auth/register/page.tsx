@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Building2, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Building2, Mail, Lock, Eye, EyeOff, User, Phone, AlertCircle, CheckCircle } from 'lucide-react';
+import { authService } from '@/data/users';
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -15,32 +18,47 @@ export default function RegisterPage() {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
 
     setLoading(true);
-    
-    // Simulate registration
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Store mock user
-    localStorage.setItem('betapp_user', JSON.stringify({
-      id: '1',
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-    }));
-    
-    window.location.href = '/dashboard';
+    setError('');
+
+    try {
+      const user = await authService.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+      });
+      
+      localStorage.setItem('betapp_user', JSON.stringify(user));
+      setSuccess(true);
+      setTimeout(() => router.push('/dashboard'), 1500);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,6 +84,19 @@ export default function RegisterPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="flex items-center p-3 bg-luxury-error/10 border border-luxury-error/30 rounded">
+                <AlertCircle className="w-5 h-5 text-luxury-error mr-2" />
+                <span className="text-luxury-error text-sm">{error}</span>
+              </div>
+            )}
+            {success && (
+              <div className="flex items-center p-3 bg-luxury-success/10 border border-luxury-success/30 rounded">
+                <CheckCircle className="w-5 h-5 text-luxury-success mr-2" />
+                <span className="text-luxury-success text-sm">Account created! Redirecting...</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-luxury-textMuted mb-2">First Name</label>
