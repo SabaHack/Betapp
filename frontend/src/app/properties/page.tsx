@@ -1,16 +1,26 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+
 import { Search, Filter, X } from 'lucide-react';
+
 import PropertyCard from '@/components/PropertyCard';
 import { propertyService } from '@/services/propertyService';
-import { Property, PropertyFilters, ListingType, PropertyType } from '@/types/property';
-import { cities, subCities, propertyTypes } from '@/data/properties';
+
+import {
+  Property,
+  PropertyFilters,
+  ListingType,
+  PropertyType,
+} from '@/types/property';
+
+import { cities, propertyTypes } from '@/data/properties';
 
 export default function PropertiesPage() {
   const searchParams = useSearchParams();
-  //const setSearchParams = useSearchParams()[1];
+  const router = useRouter();
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -22,18 +32,22 @@ export default function PropertiesPage() {
     city: undefined,
   });
 
-  // Initialize filters from URL params after hydration
+  // Initialize filters from URL parameters
   useEffect(() => {
-    if (searchParams) {
-      setFilters({
-        listingType: (searchParams.get('type') as ListingType) || undefined,
-        propertyType: (searchParams.get('propertyType') as PropertyType) || undefined,
-        city: searchParams.get('city') || undefined,
-      });
-      setIsReady(true);
-    }
+    setFilters({
+      listingType:
+        (searchParams.get('type') as ListingType) || undefined,
+
+      propertyType:
+        (searchParams.get('propertyType') as PropertyType) || undefined,
+
+      city: searchParams.get('city') || undefined,
+    });
+
+    setIsReady(true);
   }, [searchParams]);
 
+  // Load properties whenever filters change
   useEffect(() => {
     if (isReady) {
       loadProperties();
@@ -42,36 +56,64 @@ export default function PropertiesPage() {
 
   const loadProperties = async () => {
     setLoading(true);
+
     const result = await propertyService.getAllProperties(filters);
+
     setProperties(result);
     setLoading(false);
   };
 
-  const handleFilterChange = (key: keyof PropertyFilters, value: string | undefined) => {
-    const newFilters = { ...filters, [key]: value || undefined };
+  const handleFilterChange = (
+    key: keyof PropertyFilters,
+    value: string | undefined
+  ) => {
+    const newFilters = {
+      ...filters,
+      [key]: value || undefined,
+    };
+
     setFilters(newFilters);
-    
-    // Update URL params
+
+    // Update URL parameters
     const params = new URLSearchParams();
-    if (newFilters.listingType) params.set('type', newFilters.listingType);
-    if (newFilters.propertyType) params.set('propertyType', newFilters.propertyType);
-    if (newFilters.city) params.set('city', newFilters.city);
-    setSearchParams(params);
+
+    if (newFilters.listingType) {
+      params.set('type', newFilters.listingType);
+    }
+
+    if (newFilters.propertyType) {
+      params.set('propertyType', newFilters.propertyType);
+    }
+
+    if (newFilters.city) {
+      params.set('city', newFilters.city);
+    }
+
+    router.push(`/properties?${params.toString()}`);
   };
 
   const clearFilters = () => {
-    setFilters({});
-    setSearchParams({});
+    setFilters({
+      listingType: undefined,
+      propertyType: undefined,
+      city: undefined,
+    });
+
+    router.push('/properties');
   };
 
-  const activeFiltersCount = Object.values(filters).filter(Boolean).length;
+  const activeFiltersCount =
+    Object.values(filters).filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-luxury-dark">
       {/* Header */}
       <div className="bg-luxury-charcoal border-b border-luxury-border py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="font-display text-4xl font-bold text-white mb-4">Properties</h1>
+          <h1 className="font-display text-4xl font-bold text-white mb-4">
+            Properties
+          </h1>
+
           <p className="text-luxury-textMuted">
             Discover {properties.length} properties across Ethiopia
           </p>
@@ -85,6 +127,7 @@ export default function PropertiesPage() {
             {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-luxury-textMuted" />
+
               <input
                 type="text"
                 placeholder="Search properties..."
@@ -95,7 +138,14 @@ export default function PropertiesPage() {
             {/* Buy/Rent Toggle */}
             <div className="flex rounded-none overflow-hidden border border-luxury-border">
               <button
-                onClick={() => handleFilterChange('listingType', filters.listingType === 'buy' ? undefined : 'buy')}
+                onClick={() =>
+                  handleFilterChange(
+                    'listingType',
+                    filters.listingType === 'buy'
+                      ? undefined
+                      : 'buy'
+                  )
+                }
                 className={`px-4 py-2 text-sm font-medium transition-colors ${
                   filters.listingType === 'buy'
                     ? 'bg-luxury-gold text-luxury-black'
@@ -104,8 +154,16 @@ export default function PropertiesPage() {
               >
                 Buy
               </button>
+
               <button
-                onClick={() => handleFilterChange('listingType', filters.listingType === 'rent' ? undefined : 'rent')}
+                onClick={() =>
+                  handleFilterChange(
+                    'listingType',
+                    filters.listingType === 'rent'
+                      ? undefined
+                      : 'rent'
+                  )
+                }
                 className={`px-4 py-2 text-sm font-medium transition-colors ${
                   filters.listingType === 'rent'
                     ? 'bg-luxury-gold text-luxury-black'
@@ -119,24 +177,37 @@ export default function PropertiesPage() {
             {/* City Filter */}
             <select
               value={filters.city || ''}
-              onChange={(e) => handleFilterChange('city', e.target.value)}
+              onChange={(e) =>
+                handleFilterChange('city', e.target.value)
+              }
               className="input-field w-auto"
             >
               <option value="">All Cities</option>
+
               {cities.map((city) => (
-                <option key={city} value={city}>{city}</option>
+                <option key={city} value={city}>
+                  {city}
+                </option>
               ))}
             </select>
 
             {/* Property Type */}
             <select
               value={filters.propertyType || ''}
-              onChange={(e) => handleFilterChange('propertyType', e.target.value)}
+              onChange={(e) =>
+                handleFilterChange(
+                  'propertyType',
+                  e.target.value
+                )
+              }
               className="input-field w-auto"
             >
               <option value="">All Types</option>
+
               {propertyTypes.map((type) => (
-                <option key={type.value} value={type.value}>{type.label}</option>
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
               ))}
             </select>
 
@@ -150,7 +221,9 @@ export default function PropertiesPage() {
               }`}
             >
               <Filter className="w-4 h-4 mr-2" />
+
               Filters
+
               {activeFiltersCount > 2 && (
                 <span className="ml-2 w-5 h-5 bg-luxury-gold text-luxury-black text-xs rounded-full flex items-center justify-center">
                   {activeFiltersCount - 2}
@@ -173,29 +246,58 @@ export default function PropertiesPage() {
           {/* Advanced Filters */}
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-luxury-border grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Min Price */}
               <div>
-                <label className="block text-sm text-luxury-textMuted mb-2">Min Price (ETB)</label>
+                <label className="block text-sm text-luxury-textMuted mb-2">
+                  Min Price (ETB)
+                </label>
+
                 <input
                   type="number"
                   placeholder="Min price"
                   className="input-field"
-                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      'minPrice',
+                      e.target.value
+                    )
+                  }
                 />
               </div>
+
+              {/* Max Price */}
               <div>
-                <label className="block text-sm text-luxury-textMuted mb-2">Max Price (ETB)</label>
+                <label className="block text-sm text-luxury-textMuted mb-2">
+                  Max Price (ETB)
+                </label>
+
                 <input
                   type="number"
                   placeholder="Max price"
                   className="input-field"
-                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      'maxPrice',
+                      e.target.value
+                    )
+                  }
                 />
               </div>
+
+              {/* Bedrooms */}
               <div>
-                <label className="block text-sm text-luxury-textMuted mb-2">Bedrooms</label>
+                <label className="block text-sm text-luxury-textMuted mb-2">
+                  Bedrooms
+                </label>
+
                 <select
                   className="input-field"
-                  onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      'bedrooms',
+                      e.target.value
+                    )
+                  }
                 >
                   <option value="">Any</option>
                   <option value="1">1+</option>
@@ -209,23 +311,35 @@ export default function PropertiesPage() {
           )}
         </div>
 
-        // Results */}
+        {/* Results */}
         {!isReady || loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin w-8 h-8 border-2 border-luxury-gold border-t-transparent rounded-full" />
           </div>
         ) : properties.length === 0 ? (
           <div className="text-center py-20">
-            <h3 className="font-display text-2xl text-white mb-2">No properties found</h3>
-            <p className="text-luxury-textMuted mb-4">Try adjusting your filters</p>
-            <button onClick={clearFilters} className="btn-secondary">
+            <h3 className="font-display text-2xl text-white mb-2">
+              No properties found
+            </h3>
+
+            <p className="text-luxury-textMuted mb-4">
+              Try adjusting your filters
+            </p>
+
+            <button
+              onClick={clearFilters}
+              className="btn-secondary"
+            >
               Clear Filters
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard
+                key={property.id}
+                property={property}
+              />
             ))}
           </div>
         )}
