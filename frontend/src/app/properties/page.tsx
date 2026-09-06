@@ -10,7 +10,7 @@ import { cities, subCities, propertyTypes } from '@/data/properties';
 
 export default function PropertiesPage() {
   const searchParams = useSearchParams();
-  const setSearchParams = useSearchParams()[1];
+  //const setSearchParams = useSearchParams()[1];
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
