@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+:root { --luxury-black: #0a0a0a; --luxury-charcoal: #1a1a1a; --luxury-dark: #121212; --luxury-surface: #1c1c1c; --luxury-muted: #2a2a2a; --luxury-border: #333333; --luxury-gold: #c9a962; --luxury-gold-light: #d4b978; --luxury-gold-dark: #a88b4a; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--luxury-black); color: #ffffff; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', Georgia, serif; }
+
+@layer components {
+  
+  .btn-primary {
+  @apply bg-luxury-gold text-luxury-black font-semibold px-6 py-3 rounded-none transition-all duration-300 hover:bg-luxury-goldLight hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply border border-luxury-gold text-luxury-gold font-semibold px-6 py-3 rounded-none transition-all duration-300 hover:bg-luxury-gold hover:text-luxury-black;
+  }
+  
+  .input-field {
+    @apply w-full bg-luxury-surface border border-luxury-border px-4 py-3 text-white placeholder-luxury-textMuted focus:outline-none focus:border-luxury-gold transition-colors duration-300;
+  }
+  
+  .card-luxury {
+    @apply bg-luxury-surface border border-luxury-border overflow-hidden transition-all duration-300 hover:border-luxury-gold;
+  }
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--luxury-charcoal); }
+::-webkit-scrollbar-thumb { background: var(--luxury-muted); border-radius: 4px; }
+::selection { background: var(--luxury-gold); color: var(--luxury-black); }
